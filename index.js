@@ -33,8 +33,13 @@ async function run() {
         const toyCollection = client.db('schleishDB').collection('toys')
 
         app.get('/toys', async (req, res) => {
-            const cursor = toyCollection.find()
-            const result = await cursor.toArray()
+            let query = {}
+            if (req.query?.email) {
+                query = {
+                    sellerEmail: req.query.email
+                }
+            }
+            const result = await toyCollection.find(query).toArray()
             res.send(result)
         })
 
@@ -51,6 +56,13 @@ async function run() {
             console.log(addToy)
             const results = await toyCollection.insertOne(addToy)
             res.send(results)
+        })
+
+        app.delete('/toy/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await toyCollection.deleteOne(query)
+            res.send(result)
         })
 
         // Send a ping to confirm a successful connection
