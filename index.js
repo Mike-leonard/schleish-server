@@ -1,5 +1,5 @@
 const express = require('express')
-const { MongoClient, ServerApiVersion } = require('mongodb')
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
 const cors = require('cors')
 require('dotenv').config()
 const app = express()
@@ -13,7 +13,6 @@ app.use(express.json())
 app.get('/', (req, res) => {
     res.send('Schleish server is running')
 })
-
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.dodjx0x.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -33,6 +32,20 @@ async function run() {
 
         const toyCollection = client.db('schleishDB').collection('toys')
 
+        app.get('/toys', async (req, res) => {
+            const cursor = toyCollection.find()
+            const result = await cursor.toArray()
+            res.send(result)
+        })
+
+
+        app.get('/toy/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await toyCollection.findOne(query)
+            res.send(result)
+        })
+        
         app.post('/addToy', async (req, res) => {
             const addToy = req.body
             console.log(addToy)
