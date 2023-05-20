@@ -22,13 +22,21 @@ const client = new MongoClient(uri, {
         version: ServerApiVersion.v1,
         strict: true,
         deprecationErrors: true,
-    }
+    },
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    maxPoolSize: 10,
 });
 
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        client.connect(err => {
+            if (err) {
+                console.error(err)
+                return
+            }
+        });
 
         const toyCollection = client.db('schleishDB').collection('toys')
 
@@ -44,7 +52,6 @@ async function run() {
                     category: req.query.category
                 }
             }
-            console.log(req.query)
             const result = await toyCollection.find(query).toArray()
             res.send(result)
         })
