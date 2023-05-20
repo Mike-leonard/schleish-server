@@ -50,12 +50,30 @@ async function run() {
             const result = await toyCollection.findOne(query)
             res.send(result)
         })
-        
+
         app.post('/addToy', async (req, res) => {
             const addToy = req.body
-            console.log(addToy)
             const results = await toyCollection.insertOne(addToy)
             res.send(results)
+        })
+
+        app.patch('/toy/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const options = { upsert: true }
+            const updatedToy = req.body
+
+            const toy = {
+                $set: {
+                    toyName: updatedToy.toyName,
+                    price: updatedToy.price,
+                    quantity: updatedToy.quantity,
+                    pdDetails: updatedToy.pdDetails,
+                }
+            }
+            const result = await toyCollection.updateOne(query, toy, options)
+            res.send(result)
+
         })
 
         app.delete('/toy/:id', async (req, res) => {
@@ -70,7 +88,7 @@ async function run() {
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
-       // await client.close();
+        // await client.close();
     }
 }
 run().catch(console.dir);
