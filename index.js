@@ -52,10 +52,73 @@ async function run() {
                     category: req.query.category
                 }
             }
-            const result = await toyCollection.find(query).toArray()
+            else if (req.query?.search) {
+                query = {
+                    toyName: req.query.search
+                }
+            }
+
+            let result
+            if (req.query?.limit) {
+                result = await toyCollection.find(query).limit(parseInt(req.query.limit)).toArray()
+            }
+            else if (req.query?.sort) {
+                if (req.query.sort === 'asc'){
+                   // result = await toyCollection.find(query).sort({price: 1}).toArray()
+                    result = await toyCollection
+                        .aggregate([
+                            { $match: query },
+                            {
+                                $addFields: {
+                                    priceAsInt: {
+                                        $convert: {
+                                            input: "$price",
+                                            to: "int",
+                                            onError: 0,
+                                            onNull: 0
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                $sort: {
+                                    priceAsInt: 1
+                                }
+                            }
+                        ])
+                        .toArray();
+
+                } else {
+                    result = await toyCollection
+                        .aggregate([
+                            { $match: query },
+                            {
+                                $addFields: {
+                                    priceAsInt: {
+                                        $convert: {
+                                            input: "$price",
+                                            to: "int",
+                                            onError: 0,
+                                            onNull: 0
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                $sort: {
+                                    priceAsInt: -1
+                                }
+                            }
+                        ])
+                        .toArray();
+                }
+            }
+            else {
+                result = await toyCollection.find(query).toArray()
+            }
+            console.log(result.length, req.query)
             res.send(result)
         })
-
 
         app.get('/toy/:id', async (req, res) => {
             const id = req.params.id
